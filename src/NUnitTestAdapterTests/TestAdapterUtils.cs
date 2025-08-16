@@ -22,46 +22,46 @@
 // ***********************************************************************
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+
+using NUnit.Engine.Runners;
 using NUnit.Engine.Services;
 using NUnit.Framework;
 
-namespace NUnit.VisualStudio.TestAdapter.Tests
+namespace NUnit.VisualStudio.TestAdapter.Tests;
+
+internal static class TestAdapterUtils
 {
-    internal static class TestAdapterUtils
+    public static ITestDiscoverer CreateDiscoverer()
     {
-        public static ITestDiscoverer CreateDiscoverer()
-        {
-            var discoverer = new NUnit3TestDiscoverer();
-            InitializeForTesting(discoverer);
-            return discoverer;
-        }
+        var discoverer = new NUnit3TestDiscoverer();
+        InitializeForTesting(discoverer);
+        return discoverer;
+    }
 
-        public static ITestExecutor CreateExecutor()
-        {
-            var executor = new NUnit3TestExecutor();
-            InitializeForTesting(executor);
-            return executor;
-        }
+    public static ITestExecutor CreateExecutor()
+    {
+        var executor = new NUnit3TestExecutor();
+        InitializeForTesting(executor);
+        return executor;
+    }
 
-        private static void InitializeForTesting(NUnitTestAdapter adapter)
-        {
-#if NET46
+    private static void InitializeForTesting(NUnitTestAdapter adapter)
+    {
+#if NET462
             adapter.NUnitEngineAdapter.InternalEngineCreated += engine =>
             {
                 var concreteEngineType = (NUnit.Engine.TestEngine)engine;
                 concreteEngineType.Services.Add(new SettingsService(true));
-                concreteEngineType.Services.Add(new DomainManager());
                 concreteEngineType.Services.Add(new ExtensionService());
                 concreteEngineType.Services.Add(new DriverService());
                 concreteEngineType.Services.Add(new RecentFilesService());
                 concreteEngineType.Services.Add(new ProjectService());
                 concreteEngineType.Services.Add(new RuntimeFrameworkService());
                 concreteEngineType.Services.Add(new DefaultTestRunnerFactory());
-                concreteEngineType.Services.Add(new TestAgency("TestAgency for " + TestContext.CurrentContext.Test.Name, 0));
+                concreteEngineType.Services.Add(new TestAgency()); // "TestAgency for " + TestContext.CurrentContext.Test.Name, 0));
                 concreteEngineType.Services.Add(new ResultService());
                 concreteEngineType.Services.Add(new TestFilterService());
             };
 #endif
-        }
     }
 }

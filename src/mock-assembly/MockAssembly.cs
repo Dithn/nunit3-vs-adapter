@@ -23,6 +23,7 @@
 
 using System;
 using System.IO;
+
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
@@ -35,7 +36,7 @@ namespace NUnit.Tests
         /// </summary>
         public class MockAssembly
         {
-            public const int Classes = 10;
+            public const int Classes = 11;
             public const int NamespaceSuites = 6; // assembly, NUnit, Tests, Assemblies, Singletons, TestAssembly
 
             // While const values are copied to other projects at compile time,
@@ -52,7 +53,8 @@ namespace NUnit.Tests
                         + ParameterizedFixture.Tests
                         + GenericFixtureConstants.Tests
                         + ParentClass.Tests
-                        + FixtureWithAttachment.Tests;
+                        + FixtureWithAttachment.Tests
+                        + OneOfEach.Tests;
 
             public const int Suites = MockTestFixture.Suites
                         + Singletons.OneTestCase.Suites
@@ -70,8 +72,8 @@ namespace NUnit.Tests
             public const int ExplicitFixtures = 1;
             public const int SuitesRun = Suites - ExplicitFixtures;
 
-            public const int Ignored = MockTestFixture.Ignored + IgnoredFixture.Tests;
-            public const int Explicit = MockTestFixture.Explicit + ExplicitFixture.Tests;
+            public const int Ignored = MockTestFixture.Ignored + IgnoredFixture.Tests + OneOfEach.IgnoredTests;
+            public const int Explicit = MockTestFixture.Explicit + ExplicitFixture.Tests + OneOfEach.ExplicitTests;
             public const int NotRun = Ignored + Explicit + NotRunnable;
             public const int TestsRun = Tests - NotRun;
             public const int ResultCount = Tests;
@@ -86,7 +88,7 @@ namespace NUnit.Tests
             public const int Categories = MockTestFixture.Categories;
         }
 
-        [TestFixture(Description="Fake Test Fixture")]
+        [TestFixture(Description = "Fake Test Fixture")]
         [Category("FixtureCategory")]
         public class MockTestFixture
         {
@@ -110,7 +112,7 @@ namespace NUnit.Tests
             public const int Categories = 5;
             public const int MockCategoryTests = 2;
 
-            [Test(Description="Mock Test #1")]
+            [Test(Description = "Mock Test #1")]
             public void MockTest1()
             { }
 
@@ -128,7 +130,9 @@ namespace NUnit.Tests
             { Assert.Pass("Succeeded!"); }
 
             [Test]
+#pragma warning disable NUnit1026 // The test or setup/teardown method is not public
             protected static void MockTest5()
+#pragma warning restore NUnit1026 // The test or setup/teardown method is not public
             { }
 
             [Test]
@@ -151,9 +155,14 @@ namespace NUnit.Tests
             [Category("Special")]
             public void ExplicitlyRunTest()
             { }
+            // ReSharper disable once NUnit.MethodWithParametersAndTestAttribute
 
+#pragma warning disable NUnit1027 // Remove unused parameter
             [Test]
+#pragma warning disable IDE0060 // Remove unused parameter
             public void NotRunnableTest(int a, int b)
+#pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning restore NUnit1027
             {
             }
 
@@ -241,7 +250,11 @@ namespace NUnit.Tests
         public const int Tests = 1;
         public const int Suites = 1;
 
+#pragma warning disable IDE0290 // Use primary constructor
+#pragma warning disable IDE0060 // Remove unused parameter
         public BadFixture(int val) { }
+#pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning restore IDE0290 // Use primary constructor
 
         [Test]
         public void SomeTest() { }
@@ -253,8 +266,8 @@ namespace NUnit.Tests
         public const int Tests = 4;
         public const int Suites = 3;
 
-        [TestCase(2, 2, ExpectedResult=4)]
-        [TestCase(9, 11, ExpectedResult=20)]
+        [TestCase(2, 2, ExpectedResult = 4)]
+        [TestCase(9, 11, ExpectedResult = 20)]
         public int MethodWithParameters(int x, int y)
         {
             return x + y;
@@ -262,7 +275,9 @@ namespace NUnit.Tests
 
         [TestCase(2, 4)]
         [TestCase(9.2, 11.7)]
+#pragma warning disable IDE0060 // Remove unused parameter
         public void GenericMethod<T>(T x, T y)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
         }
     }
@@ -274,7 +289,11 @@ namespace NUnit.Tests
         public const int Tests = 4;
         public const int Suites = 3;
 
+#pragma warning disable IDE0290 // Use primary constructor
+#pragma warning disable IDE0060 // Remove unused parameter
         public ParameterizedFixture(int num) { }
+#pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning restore IDE0290 // Use primary constructor
 
         [Test]
         public void Test1() { }
@@ -293,7 +312,11 @@ namespace NUnit.Tests
     [TestFixture(11.5)]
     public class GenericFixture<T>
     {
+#pragma warning disable IDE0290 // Use primary constructor
+#pragma warning disable IDE0060 // Remove unused parameter
         public GenericFixture(T num) { }
+#pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning restore IDE0290 // Use primary constructor
 
         [Test]
         public void Test1() { }
@@ -343,5 +366,28 @@ namespace NUnit.Tests
             Assert.That(File.Exists(filepath2), $"Could not find {filepath2}");
             TestContext.AddTestAttachment(filepath2, Attachment2Description);
         }
+    }
+
+    [Category("OneOfEachCat")]
+    [TestFixture]
+    public class OneOfEach
+    {
+        public const int Tests = 3;
+        public const int ExplicitTests = 1;
+        public const int IgnoredTests = 1;
+
+        [Test]
+        public void NormalTest() { }
+
+        [Explicit]
+        [Test]
+        public void ExplicitTest()
+        {
+            Environment.Exit(42);
+        }
+
+        [Ignore("")]
+        [Test]
+        public void IgnoredTest() { }
     }
 }

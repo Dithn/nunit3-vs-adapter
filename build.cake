@@ -1,5 +1,5 @@
-#tool vswhere&version=2.7.1
-#tool Microsoft.TestPlatform&version=16.3.0
+#tool vswhere&version=3.1.7
+#tool Microsoft.TestPlatform&version=17.12.0
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -12,49 +12,14 @@ var configuration = Argument("configuration", "Release");
 // SET PACKAGE VERSION
 //////////////////////////////////////////////////////////////////////
 
-var version = "4.0.0";
-var modifier = "-beta.2";
+
+var version = "5.1.0";
+
+var modifier = "";
 
 var dbgSuffix = configuration.ToLower() == "debug" ? "-dbg" : "";
 var packageVersion = version + modifier + dbgSuffix;
 Information("Packageversion: "+packageVersion);
-if (BuildSystem.IsRunningOnAppVeyor)
-{
-    var tag = AppVeyor.Environment.Repository.Tag;
-
-    if (tag.IsTag)
-    {
-        packageVersion = tag.Name;
-    }
-    else
-    {
-        var buildNumber = AppVeyor.Environment.Build.Number.ToString("00000");
-        var branch = AppVeyor.Environment.Repository.Branch.Replace(".", "").Replace("/", "");
-        var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
-
-        if (branch == "master" && !isPullRequest)
-        {
-            packageVersion = version + "-dev-" + buildNumber + dbgSuffix;
-        }
-        else
-        {
-            var suffix = "-ci-" + buildNumber + dbgSuffix;
-
-            if (isPullRequest)
-                suffix += "-pr-" + AppVeyor.Environment.PullRequest.Number;
-            else
-                suffix += "-" + System.Text.RegularExpressions.Regex.Replace(branch, "[^0-9A-Za-z-]+", "-");
-
-            // Nuget limits "special version part" to 20 chars. Add one for the hyphen.
-            if (suffix.Length > 21)
-                suffix = suffix.Substring(0, 21);
-
-            packageVersion = version + suffix;
-        }
-    }
-
-    AppVeyor.UpdateBuildVersion(packageVersion);
-}
 
 var packageName = "NUnit3TestAdapter-" + packageVersion;
 
@@ -71,9 +36,9 @@ var BIN_DIR = PROJECT_DIR + "bin/" + configuration + "/";
 
 var ADAPTER_PROJECT = SRC_DIR + "NUnitTestAdapter/NUnit.TestAdapter.csproj";
 
-var NETCOREAPP_TFM = "netcoreapp2.1";
+var NETCOREAPP_TFM = "netcoreapp3.1";
 
-var ADAPTER_BIN_DIR_NET35 = SRC_DIR + $"NUnitTestAdapter/bin/{configuration}/net35/";
+var ADAPTER_BIN_DIR_NET462 = SRC_DIR + $"NUnitTestAdapter/bin/{configuration}/net462/";
 var ADAPTER_BIN_DIR_NETCOREAPP = SRC_DIR + $"NUnitTestAdapter/bin/{configuration}/{NETCOREAPP_TFM}/";
 
 var BIN_DIRS = new [] {
@@ -170,7 +135,7 @@ string GetTestAssemblyPath(string framework)
 }
 
 foreach (var (framework, vstestFramework, adapterDir) in new[] {
-    ("net46", "Framework45", ADAPTER_BIN_DIR_NET35),
+    ("net462", "Framework45", ADAPTER_BIN_DIR_NET462),
     (NETCOREAPP_TFM, NETCOREAPP_TFM, ADAPTER_BIN_DIR_NETCOREAPP)
 })
 {
@@ -246,20 +211,21 @@ Task("CreateWorkingImage")
         CopyFileToDirectory("LICENSE", PACKAGE_IMAGE_DIR);
 
         // dotnet publish doesn't work for .NET 3.5
-        var net35Files = new FilePath[]
+        var net462Files = new FilePath[]
         {
-            ADAPTER_BIN_DIR_NET35 + "NUnit3.TestAdapter.dll",
-            ADAPTER_BIN_DIR_NET35 + "NUnit3.TestAdapter.pdb",
-            ADAPTER_BIN_DIR_NET35 + "nunit.engine.dll",
-            ADAPTER_BIN_DIR_NET35 + "nunit.engine.api.dll",
-            ADAPTER_BIN_DIR_NET35 + "nunit.engine.core.dll",
-            ADAPTER_BIN_DIR_NET35 + "testcentric.engine.metadata.dll"
+            ADAPTER_BIN_DIR_NET462 + "NUnit3.TestAdapter.dll",
+            ADAPTER_BIN_DIR_NET462 + "NUnit3.TestAdapter.pdb",
+            ADAPTER_BIN_DIR_NET462 + "nunit.engine.dll",
+            ADAPTER_BIN_DIR_NET462 + "nunit.engine.api.dll",
+            ADAPTER_BIN_DIR_NET462 + "nunit.engine.core.dll",
+            ADAPTER_BIN_DIR_NET462 + "testcentric.engine.metadata.dll"
         };
 
-        var net35Dir = PACKAGE_IMAGE_DIR + "build/net35";
-        CreateDirectory(net35Dir);
-        CopyFiles(net35Files, net35Dir);
-        CopyFileToDirectory("nuget/net35/NUnit3TestAdapter.props", net35Dir);
+        var net462Dir = PACKAGE_IMAGE_DIR + "build/net462";
+        CreateDirectory(net462Dir);
+        CopyFiles(net462Files, net462Dir);
+        CopyFileToDirectory("nuget/net462/NUnit3TestAdapter.props", net462Dir);
+        CopyFileToDirectory("nuget/net462/NUnit3TestAdapter.targets", net462Dir);
 
         var netcoreDir = PACKAGE_IMAGE_DIR + "build/" + NETCOREAPP_TFM;
         DotNetCorePublish(ADAPTER_PROJECT, new DotNetCorePublishSettings
@@ -269,6 +235,7 @@ Task("CreateWorkingImage")
             Framework = NETCOREAPP_TFM
         });
         CopyFileToDirectory($"nuget/{NETCOREAPP_TFM}/NUnit3TestAdapter.props", netcoreDir);
+        CopyFileToDirectory($"nuget/{NETCOREAPP_TFM}/NUnit3TestAdapter.targets", netcoreDir);
     });
 
 Task("PackageZip")
@@ -290,15 +257,6 @@ Task("PackageNuGet")
         });
     });
 
-Task("PackageVsix")
-    .IsDependentOn("CreatePackageDir")
-    .Does(() =>
-    {
-        CopyFile(
-            BIN_DIR + "NUnit3TestAdapter.vsix",
-            PACKAGE_DIR + packageName + ".vsix");
-    });
-
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
 //////////////////////////////////////////////////////////////////////
@@ -308,15 +266,14 @@ Task("Rebuild")
     .IsDependentOn("Build");
 
 Task("Test")
-    .IsDependentOn("VSTest-net46")
+    .IsDependentOn("VSTest-net462")
     .IsDependentOn("VSTest-" + NETCOREAPP_TFM)
-    .IsDependentOn("DotnetTest-net46")
+    .IsDependentOn("DotnetTest-net462")
     .IsDependentOn("DotnetTest-" + NETCOREAPP_TFM);
 
 Task("Package")
     .IsDependentOn("PackageZip")
-    .IsDependentOn("PackageNuGet")
-    .IsDependentOn("PackageVsix");
+    .IsDependentOn("PackageNuGet");
 
 Task("QuickRelease")
     .IsDependentOn("Build")
@@ -336,7 +293,9 @@ Task("Acceptance")
     .Description("Ensures that known project configurations can use the produced NuGet package to restore, build, and run tests.")
     .Does(() =>
     {
-        var testAssembly = SRC_DIR + $"NUnit.TestAdapter.Tests.Acceptance/bin/{configuration}/net472/NUnit.VisualStudio.TestAdapter.Tests.Acceptance.dll";
+        // Target framework specified here should be exactly the same as the one in the acceptance project file.
+        var targetframework = "net48";
+        var testAssembly = SRC_DIR + $"NUnit.TestAdapter.Tests.Acceptance/bin/{configuration}/{targetframework}/NUnit.VisualStudio.TestAdapter.Tests.Acceptance.dll";
 
         var keepWorkspaces = Argument<bool?>("keep-workspaces", false) ?? true;
 
@@ -354,13 +313,6 @@ Task("CI")
     .IsDependentOn("Test")
     .IsDependentOn("Package")
     .IsDependentOn("Acceptance");
-
-Task("Appveyor")
-     .IsDependentOn("Build")
-     .IsDependentOn("Test")
-    .IsDependentOn("Package")
-    .IsDependentOn("Acceptance");
-
 
 Task("Default")
     .IsDependentOn("Build");

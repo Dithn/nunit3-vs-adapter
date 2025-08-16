@@ -4,28 +4,31 @@
     <IsTestProject>true</IsTestProject>
     <RootNamespace>NUnit.VisualStudio.TestAdapter.Tests</RootNamespace>
     <AssemblyName>NUnit.VisualStudio.TestAdapter.Tests</AssemblyName>
-    <TargetFrameworks>net46;netcoreapp2.1</TargetFrameworks>
-    <!--<TargetFrameworks>netcoreapp2.1</TargetFrameworks>-->
+    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <!--<TargetFrameworks>netcoreapp3.1</TargetFrameworks>-->
     <!-- For testing and debugging-->
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+    <PropertyGroup>
+        <DisableTestingPlatformServerCapability>true</DisableTestingPlatformServerCapability>
+    </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="NSubstitute" Version="4.2.2" />
-    <PackageReference Include="NUnit" Version="3.13.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.6.1" />
-    <PackageReference Include="NUnit.Analyzers" Version="3.1.0" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="TestCentric.Metadata" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="11.0.0" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <PackageReference Include="NUnit" VersionOverride="3.14.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.9.4" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+    <PackageReference Include="NUnit" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,5 +49,16 @@
       <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)' == 'Microsoft.VisualStudio.TestPlatform.ObjectModel'" />
     </ItemGroup>
   </Target>
+
+  <ItemGroup>
+    <PackageVersion Update="NUnit.Analyzers" Version="4.9.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="NUnit.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>

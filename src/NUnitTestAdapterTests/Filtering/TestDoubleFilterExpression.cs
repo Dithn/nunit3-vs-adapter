@@ -27,28 +27,20 @@ using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
-namespace NUnit.VisualStudio.TestAdapter.Tests.Filtering
+namespace NUnit.VisualStudio.TestAdapter.Tests.Filtering;
+
+public sealed class TestDoubleFilterExpression(string testCaseFilterValue, Func<Func<string, object>, bool> predicate)
+    : ITestCaseFilterExpression
 {
-    public sealed class TestDoubleFilterExpression : ITestCaseFilterExpression
+    public string TestCaseFilterValue { get; } = testCaseFilterValue;
+
+    public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
     {
-        private readonly Func<Func<string, object>, bool> predicate;
-
-        public TestDoubleFilterExpression(string testCaseFilterValue, Func<Func<string, object>, bool> predicate)
-        {
-            TestCaseFilterValue = testCaseFilterValue;
-            this.predicate = predicate;
-        }
-
-        public string TestCaseFilterValue { get; }
-
-        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
-        {
             return predicate.Invoke(propertyValueProvider);
         }
 
-        public static TestDoubleFilterExpression AnyIsEqualTo(string propertyName, object value)
-        {
+    public static TestDoubleFilterExpression AnyIsEqualTo(string propertyName, object value)
+    {
             return new ($"{propertyName}={value}", propertyValueProvider => propertyValueProvider.Invoke(propertyName) is IEnumerable list && list.Cast<object>().Contains(value));
         }
-    }
 }

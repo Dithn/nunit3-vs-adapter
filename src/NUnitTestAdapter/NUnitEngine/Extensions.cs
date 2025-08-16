@@ -27,16 +27,25 @@ using System.Linq;
 using NUnit.Engine;
 #pragma warning disable SA1618 // Generic type parameters should be documented
 
-namespace NUnit.VisualStudio.TestAdapter.NUnitEngine
-{
-    public static class Extensions
-    {
-        /// <summary>
-        /// All will return true if seq is empty.  This returns false if sequence is empty.
-        /// </summary>
-        public static bool AllWithEmptyFalse<T>(this IEnumerable<T> list, Func<T, bool> pred) =>
-            list.All(pred) && list.Any();
+namespace NUnit.VisualStudio.TestAdapter.NUnitEngine;
 
-        public static bool IsEmpty(this TestFilter filter) => filter == TestFilter.Empty;
-    }
+public static class Extensions
+{
+    /// <summary>
+    /// All will return true if seq is empty.  This returns false if sequence is empty.
+    /// </summary>
+    public static bool AllWithEmptyFalse<T>(this IEnumerable<T> list, Func<T, bool> pred)
+        => list.All(pred) && list.Any();
+
+    public static bool IsEmpty(this TestFilter filter) => filter == TestFilter.Empty;
+
+
+    public static bool IsCategoryFilter(this TestFilter filter) =>
+        filter != TestFilter.Empty && filter.Text.Contains("<cat>");
+
+    public static bool IsPartitionFilter(this TestFilter filter) =>
+        filter != TestFilter.Empty && filter.Text.Contains("<partition>");
+
+    public static bool IsNegativeCategoryFilter(this TestFilter filter) =>
+        filter.IsCategoryFilter() && filter.Text.Contains("<not><cat>");
 }

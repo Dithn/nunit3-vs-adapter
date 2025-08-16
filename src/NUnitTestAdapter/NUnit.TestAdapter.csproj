@@ -4,18 +4,21 @@
     <AssemblyName>NUnit3.TestAdapter</AssemblyName>
     <!--<AssemblyName>NUnit3.TestAdapterDebug</AssemblyName>-->
     <RootNamespace>NUnit.VisualStudio.TestAdapter</RootNamespace>
-    <!--<TargetFramework>netcoreapp2.1</TargetFramework>-->
+    <!--<TargetFramework>netcoreapp3.1</TargetFramework>-->
     <!-- For testing and debugging-->
-    <TargetFrameworks>net35;netcoreapp2.1</TargetFrameworks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <SourceLinkOriginUrl>https://github.com/nunit/nunit3-vs-adapter</SourceLinkOriginUrl>
     <SourceLinkCreate>true</SourceLinkCreate>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <StartAction>Program</StartAction>
-    <StartProgram>$(DevEnvDir)\devenv.exe</StartProgram>
-    <StartArguments>/rootsuffix Exp</StartArguments>
+    <AssemblyVersion>5.1.0.0</AssemblyVersion>
+    <FileVersion>5.1.0.0</FileVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Title>NUnit3 Test Adapter for Visual Studio</Title>
+    <Copyright>Copyright © 2011-2021 Charlie Poole, 2014-2025 Terje Sandstrom</Copyright>
+    <Description>A package containing the NUnit3 TestAdapter for Visual Studio 2012 onwards.
+        The package works with Visual Studio 2012 and newer, dotnet test and VSTest.Console.</Description>
+    <Company>NUnit Project</Company>
+    <Product>NUnit3TestAdapter</Product>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -23,23 +26,16 @@
     <Authors>Charlie Poole, Terje Sandstrom</Authors>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net462'">
     <!-- Suppress errors from https://github.com/dotnet/sdk/issues/1897-->
     <DisableHandlePackageFileConflicts>false</DisableHandlePackageFileConflicts>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All" />
-    <PackageReference Include="nunit.engine" Version="3.12.0" />
-    <PackageReference Include="TestCentric.Metadata" Version="1.4.1" Aliases="TestCentric" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net35'">
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="11.0.0" PrivateAssets="All" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="15.0.0" PrivateAssets="All" />
+      <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" />
+      <PackageReference Include="SourceLink.Create.CommandLine" PrivateAssets="All" />
+    <PackageReference Include="nunit.engine" />
+    <PackageReference Include="TestCentric.Metadata" Aliases="TestCentric" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,12 +48,15 @@
     </ItemGroup>
   </Target>
 
-  <!-- Before RemoveReferencesToEmbeddedAssembles (our thing in Common.props which disappears the ReferencePath that we need here). -->
-  <!--<Target Name="AddReferencesAsEmbeddedResources" BeforeTargets="RemoveReferencesToEmbeddedAssembles">
-    <ItemGroup>
-      --><!-- Add Mono.Cecil.dll as an embedded reference named ‘Assemblies/Mono.Cecil.dll’ --><!--
-      <EmbeddedResource Include="@(ReferencePath)" Condition="'%(Filename)' == 'Mono.Cecil'" KeepMetadata="x" LogicalName="Assemblies/%(Filename)%(Extension)" />
-    </ItemGroup>
-  </Target>-->
+  <ItemGroup>
+    <PackageVersion Update="NUnit.Analyzers" Version="4.9.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="NUnit.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>
